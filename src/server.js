@@ -8,6 +8,7 @@ async function startServer() {
     await pool.query('SELECT 1');
     app.listen(port, () => {
       console.log(`SoundNest API escuchando en http://localhost:${port}/api`);
+      console.log(`Documentación disponible en http://localhost:${port}/api-docs`);
     });
   } catch (error) {
     console.error(`No fue posible conectar con la base de datos: ${error.message}`);

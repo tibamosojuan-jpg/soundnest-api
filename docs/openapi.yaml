@@ -1,0 +1,2051 @@
+openapi: 3.0.3
+info:
+  title: SoundNest API
+  version: 1.0.0
+  description: 'API REST de SoundNest, plataforma web de streaming musical. Cubre los módulos de usuarios y sesión, catálogo,
+    playlists, reseñas y reproducciones.
+
+
+    Todas las respuestas son JSON con un mensaje en español y, según el caso, los datos solicitados (`data`) o la lista de
+    errores de validación (`errors`).
+
+
+    En esta etapa la API no usa tokens: la sesión se verifica contra las credenciales almacenadas y la autorización por rol
+    queda para el corte 3.'
+servers:
+- url: http://localhost:3000/api
+  description: Servidor local
+tags:
+- name: Usuarios y sesión
+  description: Registro, consulta y gestión de cuentas, e inicio de sesión
+- name: Catálogo
+  description: Géneros, artistas, álbumes y canciones
+- name: Playlists
+  description: Playlists de los usuarios y sus canciones
+- name: Reseñas
+  description: Publicación y moderación de reseñas
+- name: Reproducciones
+  description: Historial de reproducción y totales de escucha
+paths:
+  /users:
+    post:
+      operationId: createUser
+      tags:
+      - Usuarios y sesión
+      summary: Registrar un usuario
+      description: Crea una cuenta con rol de usuario. El correo se guarda en minúsculas y no puede estar registrado (RF-01).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateInput'
+            example:
+              name: Ana Pérez
+              email: ana@soundnest.com
+              password: Ana123456
+      responses:
+        '201':
+          description: Usuario registrado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuario registrado correctamente
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: email
+                  message: El correo no tiene un formato válido
+        '409':
+          description: El correo ya está registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: El correo ya está registrado
+    get:
+      operationId: getUsers
+      tags:
+      - Usuarios y sesión
+      summary: Listar y buscar usuarios
+      description: Devuelve los usuarios paginados. Permite buscar por nombre o correo y filtrar por estado (RF-18).
+      parameters:
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Texto a buscar en nombre o correo
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - active
+          - suspended
+        description: Estado de la cuenta
+      - &id002
+        $ref: '#/components/parameters/page'
+      - &id003
+        $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Usuarios consultados correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuarios consultados correctamente
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 20
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: status
+                  message: El estado debe ser active o suspended
+  /users/{userId}:
+    get:
+      operationId: getUser
+      tags:
+      - Usuarios y sesión
+      summary: Consultar un usuario
+      description: Devuelve los datos de un usuario. La contraseña nunca se incluye.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: Usuario consultado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuario consultado correctamente
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: userId
+                  message: El identificador debe ser un número entero positivo
+        '404': &id001
+          description: El usuario no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: El usuario no existe
+    patch:
+      operationId: updateUser
+      tags:
+      - Usuarios y sesión
+      summary: Actualizar, suspender o reactivar un usuario
+      description: Actualiza solo los campos enviados. Se usa para editar datos y para suspender o reactivar la cuenta (RF-18).
+        Debe enviarse al menos un campo.
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateInput'
+            example:
+              status: suspended
+      responses:
+        '200':
+          description: Usuario actualizado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Usuario actualizado correctamente
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: ''
+                  message: Debe enviar al menos un campo para actualizar
+        '404': *id001
+        '409':
+          description: El correo ya está registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: El correo ya está registrado
+  /sessions:
+    post:
+      operationId: createSession
+      tags:
+      - Usuarios y sesión
+      summary: Iniciar sesión
+      description: Verifica las credenciales contra la información almacenada (RF-02). En esta etapa no se genera token; la
+        respuesta devuelve los datos del usuario autenticado.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionInput'
+            example:
+              email: juan@soundnest.com
+              password: Juan12345
+      responses:
+        '201':
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Inicio de sesión exitoso
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: email
+                  message: El correo no tiene un formato válido
+        '401':
+          description: El correo o la contraseña son incorrectos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: El correo o la contraseña son incorrectos
+        '403': &id007
+          description: La cuenta del usuario está suspendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: La cuenta del usuario está suspendida
+  /genres:
+    get:
+      operationId: getGenres
+      tags:
+      - Catálogo
+      summary: Listar géneros
+      description: Devuelve todos los géneros ordenados por nombre.
+      responses:
+        '200':
+          description: Géneros consultados correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Géneros consultados correctamente
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Genre'
+    post:
+      operationId: createGenre
+      tags:
+      - Catálogo
+      summary: Crear un género
+      description: Crea un género nuevo. El nombre no puede repetirse.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenreInput'
+            example:
+              name: Jazz
+      responses:
+        '201':
+          description: Género creado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Género creado correctamente
+                  data:
+                    $ref: '#/components/schemas/Genre'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: name
+                  message: Es obligatorio
+        '409':
+          description: El género ya existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: El género ya existe
+  /artists:
+    get:
+      operationId: getArtists
+      tags:
+      - Catálogo
+      summary: Listar artistas
+      description: Devuelve los artistas paginados y ordenados por nombre (RF-03).
+      parameters:
+      - *id002
+      - *id003
+      responses:
+        '200':
+          description: Artistas consultados correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Artistas consultados correctamente
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Artist'
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 20
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: limit
+                  message: El límite debe ser un número entre 1 y 100
+    post:
+      operationId: createArtist
+      tags:
+      - Catálogo
+      summary: Crear un artista
+      description: Crea un artista activo (RF-19).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtistCreateInput'
+            example:
+              name: Shakira
+              bio: Cantante colombiana
+              imageUrl: https://example.com/shakira.jpg
+      responses:
+        '201':
+          description: Artista creado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Artista creado correctamente
+                  data:
+                    $ref: '#/components/schemas/Artist'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: name
+                  message: Es obligatorio
+  /artists/{artistId}:
+    get:
+      operationId: getArtist
+      tags:
+      - Catálogo
+      summary: Consultar un artista
+      description: Devuelve los datos de un artista.
+      parameters:
+      - $ref: '#/components/parameters/artistId'
+      responses:
+        '200':
+          description: Artista consultado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Artista consultado correctamente
+                  data:
+                    $ref: '#/components/schemas/Artist'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: artistId
+                  message: El identificador debe ser un número entero positivo
+        '404': &id004
+          description: El artista no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: El artista no existe
+    put:
+      operationId: updateArtist
+      tags:
+      - Catálogo
+      summary: Editar o retirar un artista
+      description: Reemplaza los datos del artista. Para retirarlo del catálogo se envía status inactive; el catálogo no tiene
+        borrado físico (RF-19).
+      parameters:
+      - $ref: '#/components/parameters/artistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArtistUpdateInput'
+            example:
+              name: Shakira
+              bio: Cantante barranquillera
+              imageUrl: null
+              status: active
+      responses:
+        '200':
+          description: Artista actualizado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Artista actualizado correctamente
+                  data:
+                    $ref: '#/components/schemas/Artist'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: status
+                  message: El estado debe ser active o inactive
+        '404': *id004
+  /artists/{artistId}/albums:
+    get:
+      operationId: getArtistAlbums
+      tags:
+      - Catálogo
+      summary: Listar los álbumes de un artista
+      description: Devuelve los álbumes del artista, del más reciente al más antiguo (HU-05).
+      parameters:
+      - $ref: '#/components/parameters/artistId'
+      responses:
+        '200':
+          description: Álbumes del artista consultados correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Álbumes del artista consultados correctamente
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Album'
+        '404': *id004
+    post:
+      operationId: createAlbum
+      tags:
+      - Catálogo
+      summary: Crear un álbum del artista
+      description: Crea un álbum asociado al artista de la ruta (RF-19).
+      parameters:
+      - $ref: '#/components/parameters/artistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumInput'
+            example:
+              title: Las Mujeres Ya No Lloran
+              releaseDate: '2024-03-22'
+              coverUrl: null
+      responses:
+        '201':
+          description: Álbum creado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Álbum creado correctamente
+                  data:
+                    $ref: '#/components/schemas/Album'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: releaseDate
+                  message: La fecha de lanzamiento debe tener el formato AAAA-MM-DD
+        '404': *id004
+  /albums/{albumId}:
+    get:
+      operationId: getAlbum
+      tags:
+      - Catálogo
+      summary: Consultar un álbum
+      description: Devuelve los datos de un álbum.
+      parameters:
+      - $ref: '#/components/parameters/albumId'
+      responses:
+        '200':
+          description: Álbum consultado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Álbum consultado correctamente
+                  data:
+                    $ref: '#/components/schemas/Album'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: albumId
+                  message: El identificador debe ser un número entero positivo
+        '404': &id005
+          description: El álbum no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: El álbum no existe
+    put:
+      operationId: updateAlbum
+      tags:
+      - Catálogo
+      summary: Editar un álbum
+      description: Reemplaza los datos del álbum (RF-19).
+      parameters:
+      - $ref: '#/components/parameters/albumId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumInput'
+            example:
+              title: Las Mujeres Ya No Lloran (Deluxe)
+              releaseDate: '2024-03-22'
+              coverUrl: null
+      responses:
+        '200':
+          description: Álbum actualizado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Álbum actualizado correctamente
+                  data:
+                    $ref: '#/components/schemas/Album'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: title
+                  message: Es obligatorio
+        '404': *id005
+  /albums/{albumId}/songs:
+    get:
+      operationId: getAlbumSongs
+      tags:
+      - Catálogo
+      summary: Listar las canciones del álbum
+      description: Devuelve las canciones activas del álbum en su orden original de pistas (HU-06).
+      parameters:
+      - $ref: '#/components/parameters/albumId'
+      responses:
+        '200':
+          description: Canciones del álbum consultadas correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Canciones del álbum consultadas correctamente
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Song'
+        '404': *id005
+    post:
+      operationId: createSong
+      tags:
+      - Catálogo
+      summary: Crear una canción en el álbum
+      description: Crea una canción dentro del álbum. El número de pista no puede repetirse en el mismo álbum y el género
+        debe existir (RF-19).
+      parameters:
+      - $ref: '#/components/parameters/albumId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SongCreateInput'
+            example:
+              title: Puntería
+              genreId: 2
+              durationSeconds: 210
+              trackNumber: 1
+              audioUrl: null
+      responses:
+        '201':
+          description: Canción creada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Canción creada correctamente
+                  data:
+                    $ref: '#/components/schemas/Song'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: durationSeconds
+                  message: La duración debe ser un número entero positivo de segundos
+        '404': *id005
+        '409':
+          description: Ya existe una canción con ese número de pista en el álbum
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: Ya existe una canción con ese número de pista en el álbum
+  /songs:
+    get:
+      operationId: getSongs
+      tags:
+      - Catálogo
+      summary: Buscar canciones
+      description: Busca canciones activas por título y las filtra por género, con paginación (RF-04).
+      parameters:
+      - name: title
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Texto a buscar en el título
+      - name: genreId
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+        description: Identificador del género
+      - *id002
+      - *id003
+      responses:
+        '200':
+          description: Canciones consultadas correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Canciones consultadas correctamente
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Song'
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 20
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: genreId
+                  message: El género debe ser un identificador entero positivo
+  /songs/{songId}:
+    get:
+      operationId: getSong
+      tags:
+      - Catálogo
+      summary: Consultar una canción
+      description: Devuelve una canción con su álbum, artista y género.
+      parameters:
+      - $ref: '#/components/parameters/songId'
+      responses:
+        '200':
+          description: Canción consultada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Canción consultada correctamente
+                  data:
+                    $ref: '#/components/schemas/Song'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: songId
+                  message: El identificador debe ser un número entero positivo
+        '404': &id006
+          description: La canción no existe / El género no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                caso1:
+                  summary: La canción no existe
+                  value:
+                    message: La canción no existe
+                caso2:
+                  summary: El género no existe
+                  value:
+                    message: El género no existe
+    put:
+      operationId: updateSong
+      tags:
+      - Catálogo
+      summary: Editar o retirar una canción
+      description: Reemplaza los datos de la canción. Para retirarla se envía status inactive (RF-19).
+      parameters:
+      - $ref: '#/components/parameters/songId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SongUpdateInput'
+            example:
+              title: Puntería
+              genreId: 2
+              durationSeconds: 212
+              trackNumber: 1
+              audioUrl: null
+              status: active
+      responses:
+        '200':
+          description: Canción actualizada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Canción actualizada correctamente
+                  data:
+                    $ref: '#/components/schemas/Song'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: status
+                  message: El estado debe ser active o inactive
+        '404': *id006
+  /users/{userId}/playlists:
+    get:
+      operationId: getUserPlaylists
+      tags:
+      - Playlists
+      summary: Listar las playlists de un usuario
+      description: Devuelve las playlists del usuario, de la más reciente a la más antigua (RF-08).
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: Playlists del usuario consultadas correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Playlists del usuario consultadas correctamente
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Playlist'
+        '404': *id001
+    post:
+      operationId: createPlaylist
+      tags:
+      - Playlists
+      summary: Crear una playlist
+      description: Crea una playlist pública o privada para el usuario. Una cuenta suspendida no puede crear playlists (RF-08,
+        RF-10).
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaylistInput'
+            example:
+              name: Para entrenar
+              isPublic: true
+              coverUrl: null
+      responses:
+        '201':
+          description: Playlist creada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Playlist creada correctamente
+                  data:
+                    $ref: '#/components/schemas/PlaylistDetail'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: isPublic
+                  message: isPublic debe ser true o false
+        '403': *id007
+        '404': *id001
+  /playlists/{playlistId}:
+    get:
+      operationId: getPlaylist
+      tags:
+      - Playlists
+      summary: Consultar una playlist con sus canciones
+      description: Devuelve la playlist y sus canciones ordenadas por posición.
+      parameters:
+      - $ref: '#/components/parameters/playlistId'
+      responses:
+        '200':
+          description: Playlist consultada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Playlist consultada correctamente
+                  data:
+                    $ref: '#/components/schemas/PlaylistDetail'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: playlistId
+                  message: El identificador debe ser un número entero positivo
+        '404': &id008
+          description: La playlist no existe / La canción no está en la playlist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                caso1:
+                  summary: La playlist no existe
+                  value:
+                    message: La playlist no existe
+                caso2:
+                  summary: La canción no está en la playlist
+                  value:
+                    message: La canción no está en la playlist
+    put:
+      operationId: updatePlaylist
+      tags:
+      - Playlists
+      summary: Editar nombre y visibilidad
+      description: Reemplaza el nombre, la visibilidad y la portada de la playlist (RF-08, RF-10).
+      parameters:
+      - $ref: '#/components/parameters/playlistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaylistInput'
+            example:
+              name: Para entrenar
+              isPublic: false
+              coverUrl: null
+      responses:
+        '200':
+          description: Playlist actualizada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Playlist actualizada correctamente
+                  data:
+                    $ref: '#/components/schemas/PlaylistDetail'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: name
+                  message: Es obligatorio
+        '404': *id008
+    delete:
+      operationId: deletePlaylist
+      tags:
+      - Playlists
+      summary: Eliminar una playlist
+      description: Elimina la playlist y sus asociaciones con canciones (RF-08).
+      parameters:
+      - $ref: '#/components/parameters/playlistId'
+      responses:
+        '200':
+          description: Playlist eliminada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Playlist eliminada correctamente
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: playlistId
+                  message: El identificador debe ser un número entero positivo
+        '404': *id008
+  /playlists/{playlistId}/songs:
+    post:
+      operationId: addPlaylistSong
+      tags:
+      - Playlists
+      summary: Agregar una canción a la playlist
+      description: Agrega la canción al final de la playlist. La canción debe estar activa y no puede repetirse (RF-09).
+      parameters:
+      - $ref: '#/components/parameters/playlistId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaylistSongInput'
+            example:
+              songId: 7
+      responses:
+        '201':
+          description: Canción agregada a la playlist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Canción agregada a la playlist
+                  data:
+                    $ref: '#/components/schemas/PlaylistDetail'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: songId
+                  message: Debe ser un identificador entero positivo
+        '404': *id008
+        '409':
+          description: La canción ya está en la playlist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: La canción ya está en la playlist
+  /playlists/{playlistId}/songs/{songId}:
+    delete:
+      operationId: removePlaylistSong
+      tags:
+      - Playlists
+      summary: Quitar una canción de la playlist
+      description: Elimina la asociación entre la playlist y la canción, sin borrar la canción (RF-09).
+      parameters:
+      - $ref: '#/components/parameters/playlistId'
+      - $ref: '#/components/parameters/songId'
+      responses:
+        '200':
+          description: Canción quitada de la playlist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Canción quitada de la playlist
+                  data:
+                    $ref: '#/components/schemas/PlaylistDetail'
+        '404': *id008
+  /songs/{songId}/reviews:
+    get:
+      operationId: getSongReviews
+      tags:
+      - Reseñas
+      summary: Listar las reseñas visibles de una canción
+      description: Devuelve las reseñas visibles de la canción con sus etiquetas (RF-14).
+      parameters:
+      - $ref: '#/components/parameters/songId'
+      responses:
+        '200':
+          description: Reseñas de la canción consultadas correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Reseñas de la canción consultadas correctamente
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+        '404': *id006
+    post:
+      operationId: createReview
+      tags:
+      - Reseñas
+      summary: Publicar una reseña
+      description: Publica una reseña con calificación obligatoria y comentario, número de escuchas y etiquetas opcionales.
+        La reseña y sus etiquetas se guardan en una sola transacción. Un usuario solo puede reseñar una vez cada canción (RF-14).
+      parameters:
+      - $ref: '#/components/parameters/songId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewInput'
+            example:
+              userId: 3
+              rating: 5
+              comment: Excelente para el gimnasio
+              listenCount: 12
+              tags:
+              - bailable
+              - energía
+      responses:
+        '201':
+          description: Reseña publicada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Reseña publicada correctamente
+                  data:
+                    $ref: '#/components/schemas/Review'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: rating
+                  message: La calificación es obligatoria y debe ser un entero entre 1 y 5
+        '403': *id007
+        '404': *id006
+        '409':
+          description: El usuario ya publicó una reseña para esta canción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: El usuario ya publicó una reseña para esta canción
+  /reviews:
+    get:
+      operationId: getReviews
+      tags:
+      - Reseñas
+      summary: Listar reseñas para moderación
+      description: Devuelve las reseñas paginadas y permite filtrarlas por estado (RF-20).
+      parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - visible
+          - hidden
+        description: Estado de la reseña
+      - *id002
+      - *id003
+      responses:
+        '200':
+          description: Reseñas consultadas correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Reseñas consultadas correctamente
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Review'
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 20
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: status
+                  message: El estado debe ser visible o hidden
+  /reviews/{reviewId}:
+    patch:
+      operationId: updateReview
+      tags:
+      - Reseñas
+      summary: Ocultar o restituir una reseña
+      description: Cambia el estado de publicación de la reseña (RF-20).
+      parameters:
+      - $ref: '#/components/parameters/reviewId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewStatusInput'
+            example:
+              status: hidden
+      responses:
+        '200':
+          description: Estado de la reseña actualizado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Estado de la reseña actualizado correctamente
+                  data:
+                    $ref: '#/components/schemas/Review'
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: status
+                  message: El estado debe ser visible o hidden
+        '404':
+          description: La reseña no existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: La reseña no existe
+  /users/{userId}/play-events:
+    get:
+      operationId: getUserPlayEvents
+      tags:
+      - Reproducciones
+      summary: Consultar el historial de reproducción
+      description: Devuelve las reproducciones del usuario de la más reciente a la más antigua, con filtro opcional por rango
+        de fechas (RF-15).
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: Fecha inicial, por ejemplo 2026-10-01
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: Fecha final, por ejemplo 2026-10-31
+      - *id002
+      - *id003
+      responses:
+        '200':
+          description: Historial de reproducción consultado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Historial de reproducción consultado correctamente
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PlayEvent'
+                      page:
+                        type: integer
+                        example: 1
+                      limit:
+                        type: integer
+                        example: 20
+        '400':
+          description: Datos de entrada no válidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              example:
+                message: Los datos enviados no son válidos
+                errors:
+                - field: from
+                  message: La fecha inicial debe tener formato ISO 8601
+        '404': *id001
+    post:
+      operationId: createPlayEvent
+      tags:
+      - Reproducciones
+      summary: Registrar una reproducción
+      description: Registra un evento de reproducción. El tiempo escuchado no puede superar la duración de la canción y la
+        cuenta no puede estar suspendida (RF-15).
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlayEventInput'
+            example:
+              songId: 5
+              listenedSeconds: 120
+      responses:
+        '201':
+          description: Reproducción registrada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Reproducción registrada correctamente
+                  data:
+                    $ref: '#/components/schemas/PlayEvent'
+        '400':
+          description: El tiempo escuchado no puede superar la duración de la canción
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: El tiempo escuchado no puede superar la duración de la canción
+        '403': *id007
+        '409':
+          description: La canción no está disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              example:
+                message: La canción no está disponible
+  /users/{userId}/play-events/summary:
+    get:
+      operationId: getListeningSummary
+      tags:
+      - Reproducciones
+      summary: Consultar los totales de escucha
+      description: Calcula en el momento de la consulta el total de reproducciones, los minutos escuchados y las canciones
+        distintas (RF-16).
+      parameters:
+      - $ref: '#/components/parameters/userId'
+      responses:
+        '200':
+          description: Resumen de escucha consultado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Resumen de escucha consultado correctamente
+                  data:
+                    $ref: '#/components/schemas/ListeningSummary'
+        '404': *id001
+components:
+  parameters:
+    userId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: Identificador del usuario
+    artistId:
+      name: artistId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: Identificador del artista
+    albumId:
+      name: albumId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: Identificador del álbum
+    songId:
+      name: songId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: Identificador de la canción
+    playlistId:
+      name: playlistId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: Identificador de la playlist
+    reviewId:
+      name: reviewId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      description: Identificador de la reseña
+    page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      description: Número de página
+    limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Cantidad de resultados por página
+  schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    ValidationErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: Juan Tibamoso
+        email:
+          type: string
+          example: juan@soundnest.com
+        role:
+          type: string
+          enum:
+          - user
+          - admin
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+        createdAt:
+          type: string
+          example: '2026-10-13 20:15:00'
+    UserCreateInput:
+      type: object
+      required:
+      - name
+      - email
+      - password
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 150
+        password:
+          type: string
+          minLength: 8
+          maxLength: 255
+    UserUpdateInput:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        status:
+          type: string
+          enum:
+          - active
+          - suspended
+    SessionInput:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    Genre:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: Pop
+    GenreInput:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          maxLength: 50
+    Artist:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: The Weeknd
+        bio:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+          - active
+          - inactive
+        createdAt:
+          type: string
+    ArtistCreateInput:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        bio:
+          type: string
+          nullable: true
+        imageUrl: &id009
+          type: string
+          format: uri
+          maxLength: 255
+          nullable: true
+    ArtistUpdateInput:
+      type: object
+      required:
+      - name
+      - status
+      properties:
+        name:
+          type: string
+          maxLength: 150
+        bio:
+          type: string
+          nullable: true
+        imageUrl: *id009
+        status:
+          type: string
+          enum:
+          - active
+          - inactive
+    Album:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 3
+        artistId:
+          type: integer
+          example: 2
+        title:
+          type: string
+          example: After Hours
+        releaseDate:
+          type: string
+          format: date
+          nullable: true
+          example: '2020-03-20'
+        coverUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+    AlbumInput:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+          maxLength: 150
+        releaseDate:
+          type: string
+          format: date
+          nullable: true
+        coverUrl: *id009
+    Song:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 7
+        title:
+          type: string
+          example: Blinding Lights
+        durationSeconds:
+          type: integer
+          example: 200
+        trackNumber:
+          type: integer
+          example: 9
+        audioUrl:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+          - active
+          - inactive
+        albumId:
+          type: integer
+          example: 3
+        albumTitle:
+          type: string
+          example: After Hours
+        artistId:
+          type: integer
+          example: 2
+        artistName:
+          type: string
+          example: The Weeknd
+        genreId:
+          type: integer
+          example: 2
+        genreName:
+          type: string
+          example: Pop
+    SongCreateInput:
+      type: object
+      required:
+      - title
+      - genreId
+      - durationSeconds
+      - trackNumber
+      properties:
+        title:
+          type: string
+          maxLength: 150
+        genreId:
+          type: integer
+          minimum: 1
+        durationSeconds:
+          type: integer
+          minimum: 1
+        trackNumber:
+          type: integer
+          minimum: 1
+          maximum: 999
+        audioUrl: *id009
+    SongUpdateInput:
+      type: object
+      required:
+      - title
+      - genreId
+      - durationSeconds
+      - trackNumber
+      - status
+      properties:
+        title:
+          type: string
+          maxLength: 150
+        genreId:
+          type: integer
+          minimum: 1
+        durationSeconds:
+          type: integer
+          minimum: 1
+        trackNumber:
+          type: integer
+          minimum: 1
+          maximum: 999
+        audioUrl: *id009
+        status:
+          type: string
+          enum:
+          - active
+          - inactive
+    Playlist:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 2
+        name:
+          type: string
+          example: Chill vibes
+        isPublic:
+          type: boolean
+          example: false
+        coverUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+    PlaylistSong:
+      type: object
+      properties:
+        position:
+          type: integer
+          example: 1
+        addedAt:
+          type: string
+        songId:
+          type: integer
+          example: 7
+        title:
+          type: string
+          example: Blinding Lights
+        durationSeconds:
+          type: integer
+          example: 200
+        artistName:
+          type: string
+          example: The Weeknd
+    PlaylistDetail:
+      allOf:
+      - $ref: '#/components/schemas/Playlist'
+      - type: object
+        properties:
+          songs:
+            type: array
+            items:
+              $ref: '#/components/schemas/PlaylistSong'
+    PlaylistInput:
+      type: object
+      required:
+      - name
+      - isPublic
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        isPublic:
+          type: boolean
+        coverUrl: *id009
+    PlaylistSongInput:
+      type: object
+      required:
+      - songId
+      properties:
+        songId:
+          type: integer
+          minimum: 1
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        songId:
+          type: integer
+          example: 7
+        songTitle:
+          type: string
+          example: Blinding Lights
+        userId:
+          type: integer
+          example: 2
+        userName:
+          type: string
+          example: Juan Tibamoso
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        comment:
+          type: string
+          nullable: true
+        listenCount:
+          type: integer
+          nullable: true
+        status:
+          type: string
+          enum:
+          - visible
+          - hidden
+        createdAt:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+          example:
+          - nostalgia
+    ReviewInput:
+      type: object
+      required:
+      - userId
+      - rating
+      properties:
+        userId:
+          type: integer
+          minimum: 1
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          maxLength: 1000
+          nullable: true
+        listenCount:
+          type: integer
+          minimum: 0
+          nullable: true
+        tags:
+          type: array
+          maxItems: 10
+          items:
+            type: string
+            maxLength: 50
+    ReviewStatusInput:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          enum:
+          - visible
+          - hidden
+    PlayEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 7
+        userId:
+          type: integer
+          example: 2
+        songId:
+          type: integer
+          example: 5
+        songTitle:
+          type: string
+          example: Starboy
+        artistName:
+          type: string
+          example: The Weeknd
+        playedAt:
+          type: string
+          example: '2026-10-13 21:00:00'
+        listenedSeconds:
+          type: integer
+          example: 120
+    PlayEventInput:
+      type: object
+      required:
+      - songId
+      - listenedSeconds
+      properties:
+        songId:
+          type: integer
+          minimum: 1
+        listenedSeconds:
+          type: integer
+          minimum: 1
+    ListeningSummary:
+      type: object
+      properties:
+        totalPlays:
+          type: integer
+          example: 5
+        totalMinutes:
+          type: integer
+          example: 15
+        distinctSongs:
+          type: integer
+          example: 4
+security: []
