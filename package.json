@@ -1,0 +1,19 @@
+{
+  "name": "soundnest-api",
+  "version": "1.0.0",
+  "description": "API REST de SoundNest, plataforma web de streaming musical",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node --env-file=.env src/server.js",
+    "dev": "node --env-file=.env --watch src/server.js"
+  },
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "express-validator": "^7.2.1",
+    "mysql2": "^3.14.1"
+  }
+}
