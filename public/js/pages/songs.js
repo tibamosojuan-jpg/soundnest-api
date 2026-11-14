@@ -27,6 +27,11 @@ function renderSongList(songs) {
         createElement('div', { className: 'card-subtitle', text: `${song.artistName} · ${song.albumTitle}` })
       ]),
       createElement('span', { className: 'card-subtitle', text: song.genreName }),
+      createElement('a', {
+        className: 'button button-secondary',
+        text: 'Reseñar',
+        attributes: { href: `/reviews.html${buildQuery({ songId: song.id })}` }
+      }),
       createElement('span', { className: 'track-duration', text: formatDuration(song.durationSeconds) })
     ]);
   });

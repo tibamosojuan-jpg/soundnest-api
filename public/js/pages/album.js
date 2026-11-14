@@ -81,7 +81,7 @@ async function renderAlbumPage(pageContent) {
   }
 }
 
-const shell = renderAppShell('artists');
+const shell = renderAppShell('albums');
 
 if (shell) {
   if (!albumId) {
