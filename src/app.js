@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import apiRouter from './routes/index.js';
@@ -6,8 +7,10 @@ import notFoundHandler from './middlewares/notFoundHandler.js';
 import errorHandler from './middlewares/errorHandler.js';
 
 const app = express();
+const publicDirectory = fileURLToPath(new URL('../public', import.meta.url));
 
 app.use(express.json());
+app.use(express.static(publicDirectory));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 app.use('/api', apiRouter);
 app.use(notFoundHandler);
