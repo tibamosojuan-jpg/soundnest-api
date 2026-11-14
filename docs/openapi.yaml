@@ -1623,7 +1623,7 @@ components:
         password:
           type: string
           minLength: 8
-          maxLength: 255
+          maxLength: 72
     UserUpdateInput:
       type: object
       minProperties: 1
@@ -1637,6 +1637,7 @@ components:
         password:
           type: string
           minLength: 8
+          maxLength: 72
         status:
           type: string
           enum:

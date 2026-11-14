@@ -16,7 +16,7 @@ export function emailRule() {
 function passwordRule() {
   return body('password')
     .isString().withMessage('Debe ser un texto')
-    .isLength({ min: 8, max: 255 }).withMessage('La contraseña debe tener entre 8 y 255 caracteres');
+    .isLength({ min: 8, max: 72 }).withMessage('La contraseña debe tener entre 8 y 72 caracteres');
 }
 
 export const createUserValidator = [
