@@ -672,3 +672,175 @@ h3 {
 .auth-card .alert {
   margin-bottom: 16px;
 }
+
+/* Pantalla de reseñas */
+.review-title {
+  align-items: baseline;
+  gap: 16px;
+}
+
+.review-card {
+  background: #17122a;
+  border: 1px solid #2a2140;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.review-song {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.review-song-cover {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7c3aed, #3b1d6e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.review-stars {
+  display: flex;
+  gap: 6px;
+}
+
+.star-button {
+  background: none;
+  border: none;
+  font-size: 26px;
+  color: #4b4363;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.star-button.is-active {
+  color: #f5b301;
+}
+
+.review-textarea {
+  width: 100%;
+  min-height: 240px;
+  background: #1f1830;
+  border: 1px solid #2a2140;
+  border-radius: 12px;
+  color: #fff;
+  padding: 14px;
+  font: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.review-counter {
+  align-self: flex-end;
+  font-size: 12px;
+  color: #8b84a3;
+  margin-top: -12px;
+}
+
+.review-tags-label {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.tag-chip {
+  border: 1px solid #3a2f57;
+  background: transparent;
+  color: #cfc8e6;
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.tag-chip.is-selected {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+}
+
+.tag-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tag-input-row input {
+  flex: 1;
+  background: #1f1830;
+  border: 1px solid #2a2140;
+  border-radius: 8px;
+  color: #fff;
+  padding: 8px 12px;
+}
+
+.review-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-top: 1px solid #2a2140;
+  padding-top: 20px;
+}
+
+.listen-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #3a2f57;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.stepper button {
+  background: none;
+  border: none;
+  color: #fff;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.stepper span {
+  padding: 6px 12px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.button-purple {
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button-purple:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

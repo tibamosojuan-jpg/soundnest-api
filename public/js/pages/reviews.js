@@ -11,21 +11,21 @@ function formatStars(rating) {
   return '★'.repeat(rating) + '☆'.repeat(5 - rating);
 }
 
-async function loadSongHeader(header) {
-  showLoading(header, 'Cargando canción...');
+async function loadSongInfo(container) {
+  showLoading(container, 'Cargando canción...');
 
   try {
     const { data: song } = await apiClient.get(`/songs/${songId}`);
-    header.replaceChildren(
-      createElement('div', { className: 'card-cover', text: getInitial(song.title) }),
+    container.replaceChildren(
+      createElement('div', { className: 'review-song-cover', text: getInitial(song.title) }),
       createElement('div', {}, [
-        createElement('h2', { text: song.title }),
-        createElement('p', { className: 'text-secondary', text: song.artistName }),
-        createElement('p', { className: 'card-subtitle', text: `${song.albumTitle} · ${formatDuration(song.durationSeconds)}` })
+        createElement('div', { className: 'card-title', text: song.title }),
+        createElement('div', { className: 'card-subtitle', text: song.artistName }),
+        createElement('div', { className: 'card-subtitle', text: `${song.albumTitle} · ${formatDuration(song.durationSeconds)}` })
       ])
     );
   } catch (error) {
-    showError(header, error.message, () => loadSongHeader(header));
+    showError(container, error.message, () => loadSongInfo(container));
   }
 }
 
@@ -49,16 +49,19 @@ function loadReviews(reviewsBody) {
   });
 }
 
-function buildReviewForm(user, reviewsBody) {
+function buildReviewCard(user, reviewsBody) {
   let rating = 0;
   let listenCount = 1;
   let tags = [];
+
+  const songInfo = createElement('div', { className: 'review-song' });
+  loadSongInfo(songInfo);
 
   // Estrellas
   const starButtons = [1, 2, 3, 4, 5].map((value) => {
     const button = createElement('button', {
       className: 'star-button',
-      text: '☆',
+      text: '★',
       attributes: { type: 'button', 'aria-label': `${value} estrellas` }
     });
     button.addEventListener('click', () => {
@@ -69,16 +72,15 @@ function buildReviewForm(user, reviewsBody) {
   });
 
   function paintStars() {
-    starButtons.forEach((button, index) => {
-      button.textContent = index < rating ? '★' : '☆';
-    });
+    starButtons.forEach((button, index) => button.classList.toggle('is-active', index < rating));
   }
 
   // Comentario
   const commentArea = createElement('textarea', {
-    attributes: { maxlength: String(maxCommentLength), rows: '6', placeholder: 'Escribe tu comentario (opcional)...' }
+    className: 'review-textarea',
+    attributes: { maxlength: String(maxCommentLength), placeholder: 'Escribe tu comentario (opcional)...' }
   });
-  const commentCounter = createElement('span', { className: 'text-secondary', text: `0/${maxCommentLength}` });
+  const commentCounter = createElement('div', { className: 'review-counter', text: `0/${maxCommentLength}` });
   commentArea.addEventListener('input', () => {
     commentCounter.textContent = `${commentArea.value.length}/${maxCommentLength}`;
   });
@@ -91,7 +93,11 @@ function buildReviewForm(user, reviewsBody) {
 
   function paintTags() {
     const chips = tags.map((tag) => {
-      const chip = createElement('button', { className: 'tag-chip', text: `${tag} ×`, attributes: { type: 'button' } });
+      const chip = createElement('button', {
+        className: 'tag-chip is-selected',
+        text: `${tag} ×`,
+        attributes: { type: 'button' }
+      });
       chip.addEventListener('click', () => {
         tags = tags.filter((current) => current !== tag);
         paintTags();
@@ -133,8 +139,8 @@ function buildReviewForm(user, reviewsBody) {
 
   // Veces escuchada
   const countValue = createElement('span', { text: String(listenCount) });
-  const minusButton = createElement('button', { className: 'icon-button', text: '-', attributes: { type: 'button', 'aria-label': 'Restar escucha' } });
-  const plusButton = createElement('button', { className: 'icon-button', text: '+', attributes: { type: 'button', 'aria-label': 'Sumar escucha' } });
+  const minusButton = createElement('button', { text: '-', attributes: { type: 'button', 'aria-label': 'Restar escucha' } });
+  const plusButton = createElement('button', { text: '+', attributes: { type: 'button', 'aria-label': 'Sumar escucha' } });
 
   minusButton.addEventListener('click', () => {
     listenCount = Math.max(0, listenCount - 1);
@@ -146,28 +152,31 @@ function buildReviewForm(user, reviewsBody) {
   });
 
   const submitButton = createElement('button', {
-    className: 'button button-primary',
+    className: 'button-purple',
     text: 'Publicar reseña',
     attributes: { type: 'submit' }
   });
 
-  const form = createElement('form', { className: 'review-form' }, [
-    createElement('div', { className: 'star-picker' }, starButtons),
+  const form = createElement('form', { className: 'review-card' }, [
+    songInfo,
+    createElement('div', { className: 'review-stars' }, starButtons),
     commentArea,
-    createElement('div', {}, [commentCounter]),
+    commentCounter,
     createElement('div', {}, [
-      createElement('strong', { text: 'Etiquetas (opcional)' }),
+      createElement('div', { className: 'review-tags-label', text: 'Etiquetas (opcional)' }),
       tagChips,
       createElement('div', { className: 'tag-input-row' }, [tagInput, addTagButton])
     ]),
-    createElement('div', {}, [
-      createElement('span', { text: '¿Cuántas veces has escuchado esta canción? ' }),
-      minusButton,
-      countValue,
-      plusButton
-    ]),
-    submitButton
+    createElement('div', { className: 'review-footer' }, [
+      createElement('div', { className: 'listen-control' }, [
+        createElement('span', { text: '¿Cuántas veces has escuchado esta canción?' }),
+        createElement('div', { className: 'stepper' }, [minusButton, countValue, plusButton])
+      ]),
+      submitButton
+    ])
   ]);
+
+  paintStars();
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -218,25 +227,20 @@ if (shell) {
   if (!songId) {
     pageContent.append(createElement('div', { className: 'state state-error', text: 'Falta el identificador de la canción.' }));
   } else {
-    const songHeader = createElement('div', { className: 'page-header' });
     const reviewsBody = createElement('div');
 
     pageContent.append(
-      createElement('div', { className: 'page-header' }, [
-        createElement('div', {}, [
-          createElement('h1', { text: 'Reseñas' }),
-          createElement('p', { className: 'text-secondary', text: 'Comparte tu opinión sobre tu música' })
-        ])
+      createElement('div', { className: 'page-header review-title' }, [
+        createElement('h1', { text: 'Reseñas' }),
+        createElement('span', { className: 'text-secondary', text: 'Comparte tu opinión sobre tu música' })
       ]),
-      songHeader,
-      buildReviewForm(user, reviewsBody),
+      buildReviewCard(user, reviewsBody),
       createElement('section', { className: 'section' }, [
         createElement('h2', { className: 'section-title', text: 'Reseñas de la canción' }),
         reviewsBody
       ])
     );
 
-    loadSongHeader(songHeader);
     loadReviews(reviewsBody);
   }
 }
