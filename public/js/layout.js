@@ -15,8 +15,11 @@ const navigationItems = [
 
 function createBrand() {
   return createElement('a', { className: 'brand', attributes: { href: homePagePath } }, [
-    createElement('span', { className: 'brand-mark' }, [createIcon('music')]),
-    'SoundNest'
+    createElement('span', { className: 'brand-mark' }, [createIcon('wave')]),
+    createElement('span', { className: 'brand-name' }, [
+      createElement('span', { className: 'brand-sound', text: 'Sound' }),
+      createElement('span', { className: 'brand-nest', text: 'Nest' })
+    ])
   ]);
 }
 

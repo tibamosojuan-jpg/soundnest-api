@@ -844,3 +844,159 @@ h3 {
   opacity: 0.6;
   cursor: default;
 }
+ /* Pantalla de álbum */
+.album-hero {
+  display: flex;
+  gap: 28px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  padding: 24px;
+  background: linear-gradient(180deg, #3b1d2e 0%, #17101f 100%);
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.album-cover {
+  width: 200px;
+  height: 200px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #7c3aed, #3b1d6e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 56px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.album-info h1 {
+  margin: 4px 0 8px;
+  font-size: 44px;
+}
+
+.album-type {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #cfc8e6;
+}
+
+.album-artist {
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.album-actions {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.button-green {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #1db954;
+  border: none;
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.album-tracks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.album-tracks .track-header,
+.album-track {
+  display: grid;
+  grid-template-columns: 40px 1fr 80px;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid #2a2140;
+}
+
+.album-tracks .track-header {
+  color: #8b84a3;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.album-track {
+  cursor: pointer;
+}
+
+.album-track:hover {
+  background: #1a1428;
+}
+
+.album-track .track-duration {
+  text-align: right;
+}
+/* Encabezado del artista */
+.artist-hero {
+  background: linear-gradient(180deg, #2b1d3f 0%, #0d0a14 100%);
+  border-radius: 16px;
+  padding: 56px 32px 32px;
+  margin-bottom: 24px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.artist-info h1 {
+  font-size: 56px;
+  margin: 6px 0 8px;
+}
+
+.artist-bio {
+  color: #cfc8e6;
+  max-width: 640px;
+  margin: 0;
+}
+/* Logo de SoundNest */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.brand-mark {
+  background: none;
+  width: auto;
+  height: auto;
+  color: #a855f7;
+  display: flex;
+}
+
+.brand-mark svg {
+  width: 32px;
+  height: 32px;
+  stroke-width: 2.2;
+}
+
+.brand-name {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.brand-sound {
+  background: linear-gradient(90deg, #7c3aed, #c026d3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-nest {
+  color: #fff;
+}
