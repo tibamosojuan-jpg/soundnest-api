@@ -8,6 +8,8 @@ const navigationItems = [
   { id: 'home', label: 'Inicio', icon: 'home', href: homePagePath },
   { id: 'songs', label: 'Canciones', icon: 'music', href: '/songs.html' },
   { id: 'artists', label: 'Artistas', icon: 'microphone', href: '/artists.html' },
+  { id: 'albums', label: 'Álbumes', icon: 'disc', href: '/albums.html' },
+  { id: 'reviews', label: 'Reseñas', icon: 'star', href: '/reviews-list.html' },
   { id: 'playlists', label: 'Mis playlists', icon: 'list', href: '/playlists.html' }
 ];
 
