@@ -87,3 +87,75 @@ docs/
 postman/
 └── soundnest.postman_collection.json   Colección de pruebas
 ```
+
+## Frontend
+
+El frontend está en `public/` y lo sirve la misma API. Con `npm start`, la aplicación queda en `http://localhost:3000`.
+
+```
+public/
+├── index.html, register.html, home.html
+├── css/styles.css        Colores, tipografía y componentes del prototipo
+├── assets/               Imágenes (fondo de las pantallas de acceso)
+└── js/
+    ├── config.js         URL de la API y valores configurables
+    ├── apiClient.js      Única forma de llamar a la API
+    ├── feedback.js       Estados de carga, error, vacío y confirmación
+    ├── layout.js         Barra lateral, barra superior y reproductor
+    ├── player.js         Reproductor y registro del historial
+    ├── session.js        Usuario con sesión iniciada
+    └── pages/            Lógica de cada pantalla
+```
+
+### Crear una pantalla nueva
+
+1. Crear el HTML con solo la hoja de estilos y su script:
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canciones | SoundNest</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <script type="module" src="/js/pages/songs.js"></script>
+</body>
+</html>
+```
+
+2. En `js/pages/`, dibujar la estructura con `renderAppShell` y cargar los datos con `renderAsync`, que ya muestra la carga, el error con botón de reintentar y el mensaje de lista vacía:
+
+```js
+import { apiClient } from '../apiClient.js';
+import { renderAsync } from '../feedback.js';
+import { renderAppShell } from '../layout.js';
+
+const shell = renderAppShell('songs');
+
+if (shell) {
+  const container = document.createElement('div');
+  shell.pageContent.append(container);
+
+  renderAsync(container, {
+    load: async () => (await apiClient.get('/songs')).data.items,
+    render: (songs) => { /* devolver el elemento con la lista */ },
+    emptyMessage: 'No hay canciones disponibles',
+    loadingMessage: 'Cargando canciones...'
+  });
+}
+```
+
+Para las confirmaciones se usa `showToast`, para preguntar antes de eliminar `confirmAction`, y para reproducir una canción `playSong` de `player.js`.
+
+## Contraseñas
+
+Las contraseñas se guardan como hash bcrypt con salt. Para convertir las contraseñas en texto plano que ya existan en la base de datos (por ejemplo, después de ejecutar `seed.sql`):
+
+```bash
+npm run migrate:passwords
+```
+
+El script solo convierte las que aún no tienen hash, así que se puede ejecutar más de una vez sin dañar nada. Requiere `BCRYPT_SALT_ROUNDS` en el `.env` (ver `.env.example`).
