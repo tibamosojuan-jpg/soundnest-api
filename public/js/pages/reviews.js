@@ -51,111 +51,183 @@ function loadReviews(reviewsBody) {
   });
 }
 
-function buildReviewCard(user, reviewsBody) {
+function createStarPicker() {
   let rating = 0;
-  let listenCount = 1;
-  let tags = [];
 
-  const songInfo = createElement('div', { className: 'review-song' });
-  loadSongInfo(songInfo);
+  const buttons = Array.from({ length: starsCount }, (_, index) => createElement('button', {
+    className: 'star-button',
+    attributes: { type: 'button', 'aria-label': `${index + 1} estrellas` }
+  }, [createIcon('star')]));
 
-  const starButtons = Array.from({ length: starsCount }, (_, index) => {
-    const value = index + 1;
-    const button = createElement('button', {
-      className: 'star-button',
-      attributes: { type: 'button', 'aria-label': `${value} estrellas` }
-    }, [createIcon('star')]);
-
-    button.addEventListener('click', () => {
-      rating = value;
-      paintStars();
-    });
-
-    return button;
-  });
-
-  function paintStars() {
-    starButtons.forEach((button, index) => button.classList.toggle('is-active', index < rating));
+  function setRating(value) {
+    rating = value;
+    buttons.forEach((button, index) => button.classList.toggle('is-active', index < rating));
   }
 
-  const commentArea = createElement('textarea', {
+  buttons.forEach((button, index) => button.addEventListener('click', () => setRating(index + 1)));
+
+  return {
+    element: createElement('div', { className: 'review-stars' }, buttons),
+    getValue: () => rating,
+    reset: () => setRating(0)
+  };
+}
+
+function createCommentField() {
+  const textArea = createElement('textarea', {
     className: 'review-textarea',
     attributes: { maxlength: String(maxCommentLength), placeholder: 'Escribe tu comentario (opcional)...' }
   });
-  const commentCounter = createElement('div', { className: 'review-counter', text: `0/${maxCommentLength}` });
+  const counter = createElement('div', { className: 'review-counter' });
 
-  commentArea.addEventListener('input', () => {
-    commentCounter.textContent = `${commentArea.value.length}/${maxCommentLength}`;
-  });
+  function updateCounter() {
+    counter.textContent = `${textArea.value.length}/${maxCommentLength}`;
+  }
+
+  textArea.addEventListener('input', updateCounter);
+  updateCounter();
+
+  return {
+    elements: [textArea, counter],
+    getValue: () => textArea.value.trim() || null,
+    reset: () => {
+      textArea.value = '';
+      updateCounter();
+    }
+  };
+}
+
+function getTagError(value, tags) {
+  if (value.includes(',')) {
+    return 'Las etiquetas no pueden contener comas';
+  }
+
+  return tags.length >= maxTags ? `Máximo ${maxTags} etiquetas` : null;
+}
+
+function createTagEditor() {
+  let tags = [];
 
   const tagInput = createElement('input', {
     attributes: { type: 'text', maxlength: '50', placeholder: 'Agregar etiqueta', 'aria-label': 'Agregar etiqueta' }
   });
   const tagChips = createElement('div', { className: 'tag-list' });
-
-  function paintTags() {
-    const chips = tags.map((tag) => {
-      const chip = createElement('button', {
-        className: 'tag-chip is-selected',
-        text: `${tag} ×`,
-        attributes: { type: 'button' }
-      });
-
-      chip.addEventListener('click', () => {
-        tags = tags.filter((current) => current !== tag);
-        paintTags();
-      });
-
-      return chip;
-    });
-
-    tagChips.replaceChildren(...chips);
-  }
-
   const addTagButton = createElement('button', {
     className: 'button button-secondary',
     text: '+ Agregar',
     attributes: { type: 'button' }
   });
 
-  addTagButton.addEventListener('click', () => {
+  function setTags(nextTags) {
+    tags = nextTags;
+    const chips = tags.map((tag) => {
+      const chip = createElement('button', { className: 'tag-chip is-selected', text: `${tag} ×`, attributes: { type: 'button' } });
+      chip.addEventListener('click', () => setTags(tags.filter((current) => current !== tag)));
+      return chip;
+    });
+    tagChips.replaceChildren(...chips);
+  }
+
+  function addTag() {
     const value = tagInput.value.trim().toLowerCase();
 
     if (!value) {
       return;
     }
 
-    if (value.includes(',')) {
-      showToast('Las etiquetas no pueden contener comas', 'error');
-      return;
-    }
+    const errorMessage = getTagError(value, tags);
 
-    if (tags.length >= maxTags) {
-      showToast(`Máximo ${maxTags} etiquetas`, 'error');
+    if (errorMessage) {
+      showToast(errorMessage, 'error');
       return;
     }
 
     if (!tags.includes(value)) {
-      tags = [...tags, value];
-      paintTags();
+      setTags([...tags, value]);
     }
 
     tagInput.value = '';
-  });
+  }
 
-  const countValue = createElement('span', { text: String(listenCount) });
+  addTagButton.addEventListener('click', addTag);
+
+  return {
+    element: createElement('div', {}, [
+      createElement('div', { className: 'review-tags-label', text: 'Etiquetas (opcional)' }),
+      tagChips,
+      createElement('div', { className: 'tag-input-row' }, [tagInput, addTagButton])
+    ]),
+    getValue: () => tags,
+    reset: () => setTags([])
+  };
+}
+
+function createListenCounter() {
+  const initialCount = 1;
+  let listenCount = initialCount;
+
+  const countValue = createElement('span');
   const minusButton = createElement('button', { text: '-', attributes: { type: 'button', 'aria-label': 'Restar escucha' } });
   const plusButton = createElement('button', { text: '+', attributes: { type: 'button', 'aria-label': 'Sumar escucha' } });
 
-  minusButton.addEventListener('click', () => {
-    listenCount = Math.max(0, listenCount - 1);
+  function setCount(value) {
+    listenCount = Math.max(0, value);
     countValue.textContent = String(listenCount);
-  });
+  }
 
-  plusButton.addEventListener('click', () => {
-    listenCount += 1;
-    countValue.textContent = String(listenCount);
-  });
+  minusButton.addEventListener('click', () => setCount(listenCount - 1));
+  plusButton.addEventListener('click', () => setCount(listenCount + 1));
+  setCount(initialCount);
+
+  return {
+    element: createElement('div', { className: 'listen-control' }, [
+      createElement('span', { text: '¿Cuántas veces has escuchado esta canción?' }),
+      createElement('div', { className: 'stepper' }, [minusButton, countValue, plusButton])
+    ]),
+    getValue: () => listenCount,
+    reset: () => setCount(initialCount)
+  };
+}
+
+async function submitReview(event, { user, fields, submitButton, reviewsBody }) {
+  event.preventDefault();
+
+  if (fields.rating.getValue() === 0) {
+    showToast('Selecciona una calificación de 1 a 5', 'error');
+    return;
+  }
+
+  submitButton.disabled = true;
+
+  try {
+    await apiClient.post(`/songs/${songId}/reviews`, {
+      userId: user.id,
+      rating: fields.rating.getValue(),
+      comment: fields.comment.getValue(),
+      listenCount: fields.listenCount.getValue(),
+      tags: fields.tags.getValue()
+    });
+
+    showToast('Reseña publicada');
+    Object.values(fields).forEach((field) => field.reset());
+    loadReviews(reviewsBody);
+  } catch (error) {
+    showToast(error.message, 'error');
+  } finally {
+    submitButton.disabled = false;
+  }
+}
+
+function buildReviewForm(user, reviewsBody) {
+  const songInfo = createElement('div', { className: 'review-song' });
+  loadSongInfo(songInfo);
+
+  const fields = {
+    rating: createStarPicker(),
+    comment: createCommentField(),
+    tags: createTagEditor(),
+    listenCount: createListenCounter()
+  };
 
   const submitButton = createElement('button', {
     className: 'button-purple',
@@ -165,62 +237,13 @@ function buildReviewCard(user, reviewsBody) {
 
   const form = createElement('form', { className: 'review-card' }, [
     songInfo,
-    createElement('div', { className: 'review-stars' }, starButtons),
-    commentArea,
-    commentCounter,
-    createElement('div', {}, [
-      createElement('div', { className: 'review-tags-label', text: 'Etiquetas (opcional)' }),
-      tagChips,
-      createElement('div', { className: 'tag-input-row' }, [tagInput, addTagButton])
-    ]),
-    createElement('div', { className: 'review-footer' }, [
-      createElement('div', { className: 'listen-control' }, [
-        createElement('span', { text: '¿Cuántas veces has escuchado esta canción?' }),
-        createElement('div', { className: 'stepper' }, [minusButton, countValue, plusButton])
-      ]),
-      submitButton
-    ])
+    fields.rating.element,
+    ...fields.comment.elements,
+    fields.tags.element,
+    createElement('div', { className: 'review-footer' }, [fields.listenCount.element, submitButton])
   ]);
 
-  paintStars();
-
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-
-    if (rating === 0) {
-      showToast('Selecciona una calificación de 1 a 5', 'error');
-      return;
-    }
-
-    submitButton.disabled = true;
-
-    try {
-      await apiClient.post(`/songs/${songId}/reviews`, {
-        userId: user.id,
-        rating,
-        comment: commentArea.value.trim() || null,
-        listenCount,
-        tags
-      });
-
-      showToast('Reseña publicada');
-
-      rating = 0;
-      paintStars();
-      commentArea.value = '';
-      commentCounter.textContent = `0/${maxCommentLength}`;
-      tags = [];
-      paintTags();
-      listenCount = 1;
-      countValue.textContent = '1';
-
-      loadReviews(reviewsBody);
-    } catch (error) {
-      showToast(error.message, 'error');
-    } finally {
-      submitButton.disabled = false;
-    }
-  });
+  form.addEventListener('submit', (event) => submitReview(event, { user, fields, submitButton, reviewsBody }));
 
   return form;
 }
@@ -240,7 +263,7 @@ if (shell) {
         createElement('h1', { text: 'Reseñas' }),
         createElement('span', { className: 'text-secondary', text: 'Comparte tu opinión sobre tu música' })
       ]),
-      buildReviewCard(user, reviewsBody),
+      buildReviewForm(user, reviewsBody),
       createElement('section', { className: 'section' }, [
         createElement('h2', { className: 'section-title', text: 'Reseñas de la canción' }),
         reviewsBody
