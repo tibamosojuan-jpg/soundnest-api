@@ -1,9 +1,8 @@
-import { apiClient, buildQuery } from '../apiClient.js';
-import { createElement, formatDuration, getInitial } from '../dom.js';
+import { apiClient } from '../apiClient.js';
+import { createAlbumCard, createSongRow } from '../components.js';
+import { createElement } from '../dom.js';
 import { renderAsync, showError, showLoading } from '../feedback.js';
-import { createIcon } from '../icons.js';
 import { renderAppShell } from '../layout.js';
-import { playSong } from '../player.js';
 
 const artistId = new URLSearchParams(window.location.search).get('artistId');
 
@@ -12,6 +11,10 @@ function createSection(title, body) {
     createElement('h2', { className: 'section-title', text: title }),
     body
   ]);
+}
+
+function getReleaseYear(releaseDate) {
+  return releaseDate ? String(releaseDate).slice(0, 4) : '';
 }
 
 async function loadAlbums() {
@@ -28,40 +31,16 @@ async function loadSongs() {
 }
 
 function renderSongList(songs) {
-  const rows = songs.map((song) => {
-    const playButton = createElement('button', {
-      className: 'icon-button',
-      attributes: { type: 'button', 'aria-label': `Reproducir ${song.title}` }
-    }, [createIcon('play')]);
-    playButton.addEventListener('click', () => playSong(song));
-
-    return createElement('li', { className: 'track-row' }, [
-      playButton,
-      createElement('div', { className: 'track-meta' }, [
-        createElement('div', { className: 'card-title', text: song.title }),
-        createElement('div', { className: 'card-subtitle', text: song.albumTitle })
-      ]),
-      createElement('span', { className: 'card-subtitle', text: song.genreName }),
-      createElement('span', { className: 'track-duration', text: formatDuration(song.durationSeconds) })
-    ]);
-  });
+  const rows = songs.map((song) => createSongRow(song, {
+    subtitle: song.albumTitle,
+    actions: [createElement('span', { className: 'card-subtitle', text: song.genreName })]
+  }));
 
   return createElement('ul', { className: 'track-list' }, rows);
 }
 
 function renderAlbumCards(albums) {
-  const cards = albums.map((album) => createElement('a', {
-    attributes: { href: `/album.html${buildQuery({ albumId: album.id })}` }
-  }, [
-    createElement('div', { className: 'card' }, [
-      createElement('div', { className: 'card-cover', text: getInitial(album.title) }),
-      createElement('div', {}, [
-        createElement('div', { className: 'card-title', text: album.title }),
-        createElement('div', { className: 'card-subtitle', text: album.releaseDate ? String(album.releaseDate).slice(0, 4) : '' })
-      ])
-    ])
-  ]));
-
+  const cards = albums.map((album) => createAlbumCard(album, getReleaseYear(album.releaseDate)));
   return createElement('div', { className: 'card-grid' }, cards);
 }
 
@@ -71,10 +50,10 @@ async function loadHeader(header) {
   try {
     const { data: artist } = await apiClient.get(`/artists/${artistId}`);
     header.replaceChildren(
-      createElement('div', { className: 'card-cover card-cover-round', text: getInitial(artist.name) }),
-      createElement('div', {}, [
+      createElement('div', { className: 'artist-info' }, [
+        createElement('span', { className: 'album-type', text: 'Artista' }),
         createElement('h1', { text: artist.name }),
-        createElement('p', { className: 'text-secondary', text: artist.bio ?? 'Sin biografía disponible' })
+        createElement('p', { className: 'artist-bio', text: artist.bio ?? 'Sin biografía disponible' })
       ])
     );
   } catch (error) {
@@ -90,7 +69,7 @@ if (shell) {
   if (!artistId) {
     pageContent.append(createElement('div', { className: 'state state-error', text: 'Falta el identificador del artista.' }));
   } else {
-    const header = createElement('div', { className: 'page-header' });
+    const header = createElement('div', { className: 'artist-hero' });
     const songsBody = createElement('div');
     const albumsBody = createElement('div');
 

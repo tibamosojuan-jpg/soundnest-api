@@ -16,48 +16,59 @@ function formatTotalDuration(totalSeconds) {
 function createCover(album) {
   if (album.coverUrl) {
     const image = document.createElement('img');
-    image.className = 'card-cover';
+    image.className = 'album-cover';
     image.src = album.coverUrl;
     image.alt = album.title;
     return image;
   }
 
-  return createElement('div', { className: 'card-cover', text: getInitial(album.title) });
+  return createElement('div', { className: 'album-cover', text: getInitial(album.title) });
 }
 
 function renderHeader(album, artist, songs) {
   const totalSeconds = songs.reduce((total, song) => total + song.durationSeconds, 0);
   const year = album.releaseDate ? String(album.releaseDate).slice(0, 4) : '';
 
-  return createElement('div', { className: 'page-header' }, [
+  const playAllButton = createElement('button', {
+    className: 'button-green',
+    attributes: { type: 'button', 'aria-label': 'Reproducir álbum' }
+  }, [createIcon('play')]);
+  playAllButton.addEventListener('click', () => {
+    if (songs.length > 0) {
+      playSong(songs[0]);
+    }
+  });
+
+  return createElement('div', { className: 'album-hero' }, [
     createCover(album),
-    createElement('div', {}, [
+    createElement('div', { className: 'album-info' }, [
+      createElement('span', { className: 'album-type', text: 'Álbum' }),
       createElement('h1', { text: album.title }),
-      createElement('p', { className: 'text-secondary', text: artist.name }),
-      createElement('p', { className: 'card-subtitle', text: `${year} · ${songs.length} canciones · ${formatTotalDuration(totalSeconds)}` })
+      createElement('p', { className: 'album-artist', text: artist.name }),
+      createElement('p', { className: 'card-subtitle', text: `${year} · ${songs.length} canciones · ${formatTotalDuration(totalSeconds)}` }),
+      createElement('div', { className: 'album-actions' }, [playAllButton])
     ])
   ]);
 }
 
 function renderTrackList(songs) {
-  const rows = songs.map((song) => {
-    const playButton = createElement('button', {
-      className: 'icon-button',
-      attributes: { type: 'button', 'aria-label': `Reproducir ${song.title}` }
-    }, [createIcon('play')]);
-    playButton.addEventListener('click', () => playSong(song));
+  const header = createElement('li', { className: 'track-header' }, [
+    createElement('span', { text: '#' }),
+    createElement('span', { text: 'Título' }),
+    createElement('span', { className: 'track-duration', text: 'Duración' })
+  ]);
 
-    return createElement('li', { className: 'track-row' }, [
-      createElement('span', { className: 'track-duration', text: String(song.trackNumber) }),
-      createElement('div', { className: 'track-meta' }, [
-        createElement('div', { className: 'card-title', text: song.title })
-      ]),
-      playButton,
+  const rows = songs.map((song) => {
+    const row = createElement('li', { className: 'album-track' }, [
+      createElement('span', { className: 'track-number', text: String(song.trackNumber) }),
+      createElement('span', { className: 'track-title', text: song.title }),
       createElement('span', { className: 'track-duration', text: formatDuration(song.durationSeconds) })
     ]);
+    row.addEventListener('click', () => playSong(song));
+    return row;
   });
 
-  return createElement('ul', { className: 'track-list' }, rows);
+  return createElement('ul', { className: 'album-tracks' }, [header, ...rows]);
 }
 
 async function renderAlbumPage(pageContent) {

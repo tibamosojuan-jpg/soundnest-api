@@ -1,5 +1,6 @@
 import { apiClient, buildQuery } from '../apiClient.js';
-import { createElement, getInitial } from '../dom.js';
+import { createAlbumCard } from '../components.js';
+import { createElement } from '../dom.js';
 import { renderAsync } from '../feedback.js';
 import { renderAppShell } from '../layout.js';
 
@@ -20,18 +21,7 @@ async function loadAlbums() {
 }
 
 function renderAlbumCards(albums) {
-  const cards = albums.map((album) => createElement('a', {
-    attributes: { href: `/album.html${buildQuery({ albumId: album.id })}` }
-  }, [
-    createElement('div', { className: 'card' }, [
-      createElement('div', { className: 'card-cover', text: getInitial(album.title) }),
-      createElement('div', {}, [
-        createElement('div', { className: 'card-title', text: album.title }),
-        createElement('div', { className: 'card-subtitle', text: album.artistName })
-      ])
-    ])
-  ]));
-
+  const cards = albums.map((album) => createAlbumCard(album, album.artistName));
   return createElement('div', { className: 'card-grid' }, cards);
 }
 
