@@ -1,4 +1,5 @@
 import { apiClient } from '../apiClient.js';
+import { createBrand } from '../brand.js';
 import { loginPagePath, redirectDelayMs } from '../config.js';
 import { clearFieldErrors, hideAlert, setButtonLoading, showAlert, showFieldErrors } from '../feedback.js';
 import { getFormValues, getRequiredFieldErrors } from '../formValidation.js';
@@ -61,3 +62,5 @@ async function handleRegister(event) {
 }
 
 registerForm.addEventListener('submit', handleRegister);
+
+document.getElementById('brand-slot').replaceWith(createBrand(loginPagePath));

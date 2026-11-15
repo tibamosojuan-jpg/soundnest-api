@@ -1,3 +1,4 @@
+import { createBrand } from './brand.js';
 import { createElement, getInitial } from './dom.js';
 import { createIcon } from './icons.js';
 import { createPlayer } from './player.js';
@@ -12,16 +13,6 @@ const navigationItems = [
   { id: 'reviews', label: 'Reseñas', icon: 'star', href: '/reviews-list.html' },
   { id: 'playlists', label: 'Mis playlists', icon: 'list', href: '/playlists.html' }
 ];
-
-function createBrand() {
-  return createElement('a', { className: 'brand', attributes: { href: homePagePath } }, [
-    createElement('span', { className: 'brand-mark' }, [createIcon('wave')]),
-    createElement('span', { className: 'brand-name' }, [
-      createElement('span', { className: 'brand-sound', text: 'Sound' }),
-      createElement('span', { className: 'brand-nest', text: 'Nest' })
-    ])
-  ]);
-}
 
 function createSidebar(activePage) {
   const links = navigationItems.map(({ id, label, icon, href }) => {

@@ -1,5 +1,6 @@
 import { apiClient } from '../apiClient.js';
-import { homePagePath, redirectDelayMs } from '../config.js';
+import { createBrand } from '../brand.js';
+import { homePagePath, loginPagePath, redirectDelayMs } from '../config.js';
 import { clearFieldErrors, hideAlert, setButtonLoading, showAlert, showFieldErrors } from '../feedback.js';
 import { getFormValues, getRequiredFieldErrors } from '../formValidation.js';
 import { getCurrentUser, saveCurrentUser } from '../session.js';
@@ -54,3 +55,5 @@ if (getCurrentUser()) {
 
 showRegistrationConfirmation();
 loginForm.addEventListener('submit', handleLogin);
+
+document.getElementById('brand-slot').replaceWith(createBrand(loginPagePath));
