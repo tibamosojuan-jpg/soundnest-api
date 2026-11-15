@@ -8,13 +8,18 @@ const navigationItems = [
   { id: 'home', label: 'Inicio', icon: 'home', href: homePagePath },
   { id: 'songs', label: 'Canciones', icon: 'music', href: '/songs.html' },
   { id: 'artists', label: 'Artistas', icon: 'microphone', href: '/artists.html' },
+  { id: 'albums', label: 'Álbumes', icon: 'disc', href: '/albums.html' },
+  { id: 'reviews', label: 'Reseñas', icon: 'star', href: '/reviews-list.html' },
   { id: 'playlists', label: 'Mis playlists', icon: 'list', href: '/playlists.html' }
 ];
 
 function createBrand() {
   return createElement('a', { className: 'brand', attributes: { href: homePagePath } }, [
-    createElement('span', { className: 'brand-mark' }, [createIcon('music')]),
-    'SoundNest'
+    createElement('span', { className: 'brand-mark' }, [createIcon('wave')]),
+    createElement('span', { className: 'brand-name' }, [
+      createElement('span', { className: 'brand-sound', text: 'Sound' }),
+      createElement('span', { className: 'brand-nest', text: 'Nest' })
+    ])
   ]);
 }
 

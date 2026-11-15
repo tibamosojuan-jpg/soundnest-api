@@ -1,7 +1,7 @@
 import { apiClient, buildQuery } from '../apiClient.js';
-import { createElement, formatDuration, getInitial } from '../dom.js';
+import { createSongRow } from '../components.js';
+import { createElement, getInitial } from '../dom.js';
 import { renderAsync, showToast } from '../feedback.js';
-import { createIcon } from '../icons.js';
 import { renderAppShell } from '../layout.js';
 import { playEventRegisteredEvent, playSong } from '../player.js';
 
@@ -78,20 +78,10 @@ async function loadFeaturedSongs() {
 }
 
 function renderSongRows(songs) {
-  const rows = songs.map((song) => {
-    const playButton = createElement('button', { className: 'icon-button', attributes: { type: 'button', 'aria-label': `Reproducir ${song.title}` } }, [createIcon('play')]);
-    playButton.addEventListener('click', () => playSong(song));
-
-    return createElement('li', { className: 'track-row' }, [
-      playButton,
-      createElement('div', { className: 'track-meta' }, [
-        createElement('div', { className: 'card-title', text: song.title }),
-        createElement('div', { className: 'card-subtitle', text: `${song.artistName} · ${song.albumTitle}` })
-      ]),
-      createElement('span', { className: 'card-subtitle', text: song.genreName }),
-      createElement('span', { className: 'track-duration', text: formatDuration(song.durationSeconds) })
-    ]);
-  });
+  const rows = songs.map((song) => createSongRow(song, {
+    subtitle: `${song.artistName} · ${song.albumTitle}`,
+    actions: [createElement('span', { className: 'card-subtitle', text: song.genreName })]
+  }));
 
   return createElement('ul', { className: 'track-list' }, rows);
 }
