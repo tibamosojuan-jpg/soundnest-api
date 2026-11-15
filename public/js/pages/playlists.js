@@ -1,4 +1,4 @@
-import { apiClient } from '../apiClient.js';
+import { apiClient, buildQuery } from '../apiClient.js';
 import { createElement, getInitial } from '../dom.js';
 import { confirmAction, renderAsync, showToast } from '../feedback.js';
 import { renderAppShell } from '../layout.js';
@@ -73,6 +73,14 @@ if (shell) {
     }
   }
 
+  function createPlaylistLink(playlist) {
+    return createElement('a', {
+      className: 'card-title',
+      text: playlist.name,
+      attributes: { href: `/playlist.html${buildQuery({ playlistId: playlist.id })}` }
+    });
+  }
+
   function renderPlaylistCards(playlists) {
     const cards = playlists.map((playlist) => {
       const deleteButton = createElement('button', {
@@ -85,7 +93,7 @@ if (shell) {
       return createElement('div', { className: 'card' }, [
         createElement('div', { className: 'card-cover', text: getInitial(playlist.name) }),
         createElement('div', {}, [
-          createElement('div', { className: 'card-title', text: playlist.name }),
+          createPlaylistLink(playlist),
           createElement('div', { className: 'card-subtitle', text: playlist.isPublic ? 'Pública' : 'Privada' })
         ]),
         deleteButton
@@ -95,7 +103,6 @@ if (shell) {
     return createElement('div', { className: 'card-grid' }, cards);
   }
 
-  // Formulario para crear playlist
   const nameInput = createElement('input', {
     attributes: {
       type: 'text',
@@ -163,7 +170,6 @@ if (shell) {
     }
   });
 
-  // Filtros
   const filterOptions = [
     ['all', 'Todas'],
     ['public', 'Públicas'],

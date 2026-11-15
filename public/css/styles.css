@@ -992,3 +992,29 @@ h3 {
   color: #f5b301;
   fill: currentColor;
 }
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.create-playlist-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.create-playlist-form input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid #2e2440;
+  border-radius: 8px;
+  background: #12091f;
+  color: #fff;
+  font: inherit;
+}
