@@ -56,8 +56,6 @@ h3 {
   flex-shrink: 0;
 }
 
-/* Botones */
-
 .button {
   display: inline-flex;
   align-items: center;
@@ -132,8 +130,6 @@ h3 {
   background: var(--color-brand-hover);
 }
 
-/* Formularios */
-
 .form {
   display: flex;
   flex-direction: column;
@@ -183,8 +179,6 @@ h3 {
   font-size: 14px;
   color: var(--color-text-secondary);
 }
-
-/* Estados: carga, error, vacío y confirmación */
 
 .state {
   display: flex;
@@ -303,8 +297,6 @@ h3 {
   margin-top: 24px;
 }
 
-/* Pantallas de acceso */
-
 .auth-page {
   display: flex;
   align-items: center;
@@ -325,24 +317,6 @@ h3 {
   border-radius: var(--radius-large);
   background: rgba(18, 9, 31, 0.7);
   backdrop-filter: blur(16px);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 22px;
-  font-weight: 700;
-}
-
-.brand-mark {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--color-brand);
 }
 
 .auth-header {
@@ -366,8 +340,6 @@ h3 {
 .link-brand:hover {
   text-decoration: underline;
 }
-
-/* Estructura de la aplicación */
 
 .app-shell {
   display: grid;
@@ -472,8 +444,6 @@ h3 {
   font-size: 20px;
 }
 
-/* Tarjetas y listas */
-
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
@@ -555,8 +525,6 @@ h3 {
   font-size: 14px;
   font-variant-numeric: tabular-nums;
 }
-
-/* Reproductor */
 
 .player {
   grid-column: 1 / -1;
@@ -673,7 +641,6 @@ h3 {
   margin-bottom: 16px;
 }
 
-/* Pantalla de reseñas */
 .review-title {
   align-items: baseline;
   gap: 16px;
@@ -718,15 +685,21 @@ h3 {
 .star-button {
   background: none;
   border: none;
-  font-size: 26px;
   color: #4b4363;
   cursor: pointer;
   padding: 0;
   line-height: 1;
 }
 
-.star-button.is-active {
+.star-button svg {
+  width: 28px;
+  height: 28px;
+  color: #b3b3b3;
+}
+
+.star-button.is-active svg {
   color: #f5b301;
+  fill: currentColor;
 }
 
 .review-textarea {
@@ -844,7 +817,7 @@ h3 {
   opacity: 0.6;
   cursor: default;
 }
- /* Pantalla de álbum */
+
 .album-hero {
   display: flex;
   gap: 28px;
@@ -939,7 +912,7 @@ h3 {
 .album-track .track-duration {
   text-align: right;
 }
-/* Encabezado del artista */
+
 .artist-hero {
   background: linear-gradient(180deg, #2b1d3f 0%, #0d0a14 100%);
   border-radius: 16px;
@@ -962,20 +935,23 @@ h3 {
   max-width: 640px;
   margin: 0;
 }
-/* Logo de SoundNest */
+
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
+  font-size: 22px;
+  font-weight: 700;
   text-decoration: none;
 }
 
 .brand-mark {
-  background: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: auto;
   height: auto;
   color: #a855f7;
-  display: flex;
 }
 
 .brand-mark svg {
@@ -999,4 +975,20 @@ h3 {
 
 .brand-nest {
   color: #fff;
+}
+
+.rating-stars {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.rating-star svg {
+  width: 18px;
+  height: 18px;
+  color: #b3b3b3;
+}
+
+.rating-star.is-active svg {
+  color: #f5b301;
+  fill: currentColor;
 }

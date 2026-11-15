@@ -1,13 +1,10 @@
+import { createRatingStars } from '../components.js';
 import { apiClient, buildQuery } from '../apiClient.js';
 import { createElement } from '../dom.js';
 import { renderAsync } from '../feedback.js';
 import { renderAppShell } from '../layout.js';
 
 const reviewsLimit = 50;
-
-function formatStars(rating) {
-  return '★'.repeat(rating) + '☆'.repeat(5 - rating);
-}
 
 async function loadReviews() {
   const { data } = await apiClient.get(`/reviews${buildQuery({ status: 'visible', limit: reviewsLimit })}`);
@@ -21,7 +18,8 @@ function renderReviewCards(reviews) {
       text: review.songTitle,
       attributes: { href: `/reviews.html${buildQuery({ songId: review.songId })}` }
     }),
-    createElement('div', { className: 'card-subtitle', text: `${review.userName} · ${formatStars(review.rating)}` }),
+    createElement('div', { className: 'card-subtitle', text: review.userName }),
+    createRatingStars(review.rating),
     createElement('p', { text: review.comment ?? 'Sin comentario' }),
     createElement('div', { className: 'card-subtitle', text: review.tags.map((tag) => `#${tag}`).join(' ') })
   ]));

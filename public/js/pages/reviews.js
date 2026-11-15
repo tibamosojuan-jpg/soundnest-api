@@ -1,15 +1,14 @@
+import { createRatingStars } from '../components.js';
 import { apiClient } from '../apiClient.js';
 import { createElement, formatDuration, getInitial } from '../dom.js';
 import { renderAsync, showError, showLoading, showToast } from '../feedback.js';
+import { createIcon } from '../icons.js';
 import { renderAppShell } from '../layout.js';
 
 const songId = new URLSearchParams(window.location.search).get('songId');
 const maxCommentLength = 500;
 const maxTags = 10;
-
-function formatStars(rating) {
-  return '★'.repeat(rating) + '☆'.repeat(5 - rating);
-}
+const starsCount = 5;
 
 async function loadSongInfo(container) {
   showLoading(container, 'Cargando canción...');
@@ -32,7 +31,10 @@ async function loadSongInfo(container) {
 function renderReviewCards(reviews) {
   const cards = reviews.map((review) => createElement('div', { className: 'card' }, [
     createElement('div', { className: 'card-title', text: review.userName }),
-    createElement('div', { className: 'card-subtitle', text: `${formatStars(review.rating)} · escuchada ${review.listenCount} veces` }),
+    createElement('div', { className: 'card-subtitle' }, [
+      createRatingStars(review.rating),
+      ` · escuchada ${review.listenCount} veces`
+    ]),
     createElement('p', { text: review.comment ?? 'Sin comentario' }),
     createElement('div', { className: 'card-subtitle', text: review.tags.map((tag) => `#${tag}`).join(' ') })
   ]));
@@ -57,17 +59,18 @@ function buildReviewCard(user, reviewsBody) {
   const songInfo = createElement('div', { className: 'review-song' });
   loadSongInfo(songInfo);
 
-  // Estrellas
-  const starButtons = [1, 2, 3, 4, 5].map((value) => {
+  const starButtons = Array.from({ length: starsCount }, (_, index) => {
+    const value = index + 1;
     const button = createElement('button', {
       className: 'star-button',
-      text: '★',
       attributes: { type: 'button', 'aria-label': `${value} estrellas` }
-    });
+    }, [createIcon('star')]);
+
     button.addEventListener('click', () => {
       rating = value;
       paintStars();
     });
+
     return button;
   });
 
@@ -75,17 +78,16 @@ function buildReviewCard(user, reviewsBody) {
     starButtons.forEach((button, index) => button.classList.toggle('is-active', index < rating));
   }
 
-  // Comentario
   const commentArea = createElement('textarea', {
     className: 'review-textarea',
     attributes: { maxlength: String(maxCommentLength), placeholder: 'Escribe tu comentario (opcional)...' }
   });
   const commentCounter = createElement('div', { className: 'review-counter', text: `0/${maxCommentLength}` });
+
   commentArea.addEventListener('input', () => {
     commentCounter.textContent = `${commentArea.value.length}/${maxCommentLength}`;
   });
 
-  // Etiquetas
   const tagInput = createElement('input', {
     attributes: { type: 'text', maxlength: '50', placeholder: 'Agregar etiqueta', 'aria-label': 'Agregar etiqueta' }
   });
@@ -98,12 +100,15 @@ function buildReviewCard(user, reviewsBody) {
         text: `${tag} ×`,
         attributes: { type: 'button' }
       });
+
       chip.addEventListener('click', () => {
         tags = tags.filter((current) => current !== tag);
         paintTags();
       });
+
       return chip;
     });
+
     tagChips.replaceChildren(...chips);
   }
 
@@ -112,6 +117,7 @@ function buildReviewCard(user, reviewsBody) {
     text: '+ Agregar',
     attributes: { type: 'button' }
   });
+
   addTagButton.addEventListener('click', () => {
     const value = tagInput.value.trim().toLowerCase();
 
@@ -137,7 +143,6 @@ function buildReviewCard(user, reviewsBody) {
     tagInput.value = '';
   });
 
-  // Veces escuchada
   const countValue = createElement('span', { text: String(listenCount) });
   const minusButton = createElement('button', { text: '-', attributes: { type: 'button', 'aria-label': 'Restar escucha' } });
   const plusButton = createElement('button', { text: '+', attributes: { type: 'button', 'aria-label': 'Sumar escucha' } });
@@ -146,6 +151,7 @@ function buildReviewCard(user, reviewsBody) {
     listenCount = Math.max(0, listenCount - 1);
     countValue.textContent = String(listenCount);
   });
+
   plusButton.addEventListener('click', () => {
     listenCount += 1;
     countValue.textContent = String(listenCount);
