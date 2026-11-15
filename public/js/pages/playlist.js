@@ -23,6 +23,7 @@ async function playSongById(songId) {
 
 function createEditForm(playlist, onSaved) {
   const nameInput = createElement('input', {
+    className: 'form-input',
     attributes: { type: 'text', name: 'name', maxlength: '100', required: '', value: playlist.name }
   });
   const publicCheckbox = createElement('input', { attributes: { type: 'checkbox', name: 'isPublic' } });
@@ -98,7 +99,7 @@ function createSongList(playlist, onChanged) {
 }
 
 function createAddSongForm(songs, playlist, onChanged) {
-  const select = createElement('select', { attributes: { name: 'songId', required: '' } },
+  const select = createElement('select', { className: 'form-input', attributes: { name: 'songId', required: '' } },
     songs.map((song) => createElement('option', {
       text: `${song.title} · ${song.artistName}`,
       attributes: { value: String(song.id) }
