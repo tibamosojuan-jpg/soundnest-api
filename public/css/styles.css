@@ -505,7 +505,7 @@ h3 {
 
 .track-row {
   display: grid;
-  grid-template-columns: 40px 1fr auto auto;
+  grid-template-columns: 40px 1fr auto auto auto;
   align-items: center;
   gap: 16px;
   padding: 8px 12px;
