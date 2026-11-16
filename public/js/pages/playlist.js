@@ -3,22 +3,13 @@ import { createSongRow } from '../components.js';
 import { createElement } from '../dom.js';
 import { confirmAction, renderAsync, showError, showToast } from '../feedback.js';
 import { renderAppShell } from '../layout.js';
-import { playSong } from '../player.js';
+import { playSongById } from '../player.js';
 
 const songsCatalogLimit = 100;
 
 async function fetchPlaylist(playlistId) {
   const { data } = await apiClient.get(`/playlists/${playlistId}`);
   return data;
-}
-
-async function playSongById(songId) {
-  try {
-    const { data: song } = await apiClient.get(`/songs/${songId}`);
-    playSong(song);
-  } catch (error) {
-    showToast(error.message, 'error');
-  }
 }
 
 function createEditForm(playlist, onSaved) {

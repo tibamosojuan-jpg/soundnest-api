@@ -22,7 +22,7 @@ export function showError(container, message, onRetry) {
   container.replaceChildren(createElement('div', { className: 'state state-error', attributes: { role: 'alert' } }, children));
 }
 
-export function showEmpty(container, message) {
+function showEmpty(container, message) {
   container.replaceChildren(createElement('div', { className: 'state', text: message }));
 }
 

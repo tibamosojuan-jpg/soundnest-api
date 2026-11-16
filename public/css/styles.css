@@ -240,7 +240,7 @@ h3 {
 
 .toast-container {
   position: fixed;
-  top: 24px;
+  top: 88px;
   right: 24px;
   z-index: 100;
   display: flex;

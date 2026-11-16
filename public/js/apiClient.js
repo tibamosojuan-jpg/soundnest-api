@@ -49,6 +49,5 @@ export const apiClient = {
   get: (path) => request('GET', path),
   post: (path, body, options) => request('POST', path, body, options),
   put: (path, body) => request('PUT', path, body),
-  patch: (path, body) => request('PATCH', path, body),
   delete: (path) => request('DELETE', path)
 };
