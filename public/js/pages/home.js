@@ -1,9 +1,9 @@
 import { apiClient, buildQuery } from '../apiClient.js';
 import { createSongRow } from '../components.js';
 import { createElement, getInitial } from '../dom.js';
-import { renderAsync, showToast } from '../feedback.js';
+import { renderAsync } from '../feedback.js';
 import { renderAppShell } from '../layout.js';
-import { playEventRegisteredEvent, playSong } from '../player.js';
+import { playEventRegisteredEvent, playSongById } from '../player.js';
 
 const recentSongsLimit = 6;
 const recentPlayEventsLimit = 30;
@@ -37,15 +37,6 @@ function createCard({ title, subtitle, isRound = false }) {
       createElement('div', { className: 'card-subtitle', text: subtitle })
     ])
   ]);
-}
-
-async function playSongById(songId) {
-  try {
-    const { data: song } = await apiClient.get(`/songs/${songId}`);
-    playSong(song);
-  } catch (error) {
-    showToast(error.message, 'error');
-  }
 }
 
 async function loadRecentSongs(userId) {

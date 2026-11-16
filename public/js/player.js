@@ -91,6 +91,15 @@ function togglePlayback() {
   }
 }
 
+export async function playSongById(songId) {
+  try {
+    const { data: song } = await apiClient.get(`/songs/${songId}`);
+    playSong(song);
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
+
 export function playSong(song) {
   if (playerState.song) {
     pause();
